@@ -3,8 +3,6 @@
 library(Matrix)
 setwd('Kaggle/Ponpare/')
 
-#Goal: Apply Cosine Similariy method to unique Genre/Area subsets
-
 #read in all the input data
 cpdtr <- read.csv("coupon_detail_train.csv")
 cpltr <- read.csv("coupon_list_train.csv")
@@ -56,7 +54,6 @@ train <- train[train$USER_ID_hash!="dummyuser",]
 
 uchar <- aggregate(.~USER_ID_hash, data=train[,-1],FUN=mean)
 ucharnames <- as.data.frame(names(uchar))
-#Is this overweigthing
 uchar$DISCOUNT_PRICE <- 1
 uchar$PRICE_RATE <- 1
 
@@ -65,6 +62,8 @@ uchar$PRICE_RATE <- 1
 #uchar only c=incorporates genre_name, small area, ken, usable date
 # Genre	13, Discount	1, PriceRate	1, UsableDays	7, UsableHol	2, largearea	9, ken	47
 # smallarea	55, capsule	25, pricerate	6, discprice	7
+
+###########STOPPED HERE, FIGURING OUT WEIGHTS ###############
 W <- as.matrix(Diagonal(x=
 c(rep(3,13),  # Genre	13
 rep(1,2),     # Discount	1, PriceRate	1,
@@ -75,8 +74,8 @@ rep(3,47),    # ken	47
 rep(3,55),    # smallarea	55, 
 rep(3,25),    #capsule	25, 
 rep(3,6),     #pricerate	6, 
-rep(3,7)))     #discprice	7
-###########STOPPED HERE, FIGURING OUT WEIGHTS ###############
+rep(3,7))))     #discprice	7
+
 
 
 # uchar is a matrix of features each user values, W is weight matrix of those features, 
