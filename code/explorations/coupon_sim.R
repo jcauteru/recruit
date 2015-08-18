@@ -17,6 +17,8 @@ coup_area_train <- read.csv("coupon_area_train.csv", header = T, stringsAsFactor
 coup_list_train <- read.csv("coupon_list_train.csv", header = T, stringsAsFactors = T)
 coup_list_test <- read.csv("coupon_list_test.csv", header = T, stringsAsFactors = T)
 
+## Test coupon Similarity
+
 coup_list_train$HOLD <- TRUE
 coup_list_test$HOLD <- FALSE
 
@@ -51,7 +53,7 @@ library(parallel)
 # coupon_gower_distance <- daisy(all_data, "gower")
 
 coupon_gower_distance_DIST <- daisy(all_data_original, "gower")
-coupon_gower_distance_DF <- as.matrix(coupon_gower_distance_orig)
+coupon_gower_distance_DF <- as.matrix(coupon_gower_distance_DIST)
 
 quick_sep  <- function(num, data){
   return(data[num, (nrow(coup_list_train) + 1):ncol(coupon_gower_distance_DF)])
@@ -90,14 +92,35 @@ supporting_cols <- all_data[, supporting_cols_num]
 factors <- which(sapply(all_data[, -supporting_cols_num], is.factor)==TRUE)
 request_contrasts <- lapply(all_data[,names(factors)], contrasts, contrasts=FALSE)
 expanded <- model.matrix(~ -1 + ., all_data[, -supporting_cols_num], contrasts.arg= request_contrasts)
-all_data <- cbind(all_data[, supporting_cols_num], expanded)
+all_data <- as.data.frame(expanded)
 
-train_users <- aggregate(supporting_cols$USER_ID_hash[supporting_cols$USER_ID_HASH != 'FALSE'],
-                         train[supporting_cols$USER_ID_hash!="FALSE",], 
-                         mean)
+all_data$USER_ID_hash <- supporting_cols$USER_ID_hash
+train_users <- aggregate(.~USER_ID_hash, data=all_data[,-c(1)],FUN=mean)
+train_users <- train_users[train_users$USER_ID_hash != 'FALSE',]
 
-users <- read.csv("user_list.csv")
+# stack back with test:all_data
+add_to <- all_data[supporting_cols$USER_ID_hash == "FALSE", ]
+add_to$USER_ID_hash <- 'FALSE'
+add_to <- add_to[, names(train_users)]
+all_data2 <- rbind(train_users, add_to)
+all_data2[is.na(all_data2)] <- 1
 
+# get similar coupons for each user
+
+library(cluster)
+# coupon_gower_distance <- daisy(all_data, "gower")
+
+coupon_gower_distance_DIST <- daisy(all_data2, "gower")
+coupon_gower_distance_DF <- as.matrix(coupon_gower_distance_DIST)
+
+quick_sep  <- function(num, data){
+  return(data[num, (nrow(train_users) + 1):ncol(coupon_gower_distance_DF)])
+} 
+
+user_coupon_pairs <- do.call(rbind, 
+                             mclapply(1:nrow(train_users), 
+                                      quick_sep, 
+                                      coupon_gower_distance_DF, mc.cores=6))
 
 # Coupon similiarty:
 head(coup_list_train)
