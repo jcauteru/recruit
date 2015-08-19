@@ -74,11 +74,10 @@ coup_list_train[2, ]
 train_users <- merge(coup_det_train, coup_list_train)
 train_users <- train_users[, -c(match(c('DISPFROM', 'DISPEND', 'VALIDFROM', 'VALIDEND', 
                                                                    'ITEM_COUNT', 'I_DATE', 
-                                                                   'SMALL_AREA_NAME', 
-                                                                   'PURCHASEID_hash'), names(train_users)))
-                                ]
+                                                                   'PURCHASEID_hash', 'SMALL_AREA_NAME', 'CAPSULE_TEXT'), names(train_users)))]
+
 coup_list_test$USER_ID_hash <- 'FALSE'
-coup_list_test_users <- coup_list_test[, -c(match(c('DISPFROM', 'DISPEND', 'VALIDFROM', 'VALIDEND'),
+coup_list_test_users <- coup_list_test[, -c(match(c('DISPFROM', 'DISPEND', 'VALIDFROM', 'VALIDEND', 'CAPSULE_TEXT'),
                                                   names(coup_list_test)))]
 coup_list_test_users <- coup_list_test_users[, names(train_users)]
 
@@ -108,9 +107,12 @@ all_data2[is.na(all_data2)] <- 1
 # get similar coupons for each user
 
 library(cluster)
+library(parallel)
 # coupon_gower_distance <- daisy(all_data, "gower")
 
-coupon_gower_distance_DIST <- daisy(all_data2, "gower")
+x=c(rep(3,12), rep(1,5), rep(0,9), rep(3, ncol(all_data2) - (1+17 + 9)))
+
+coupon_gower_distance_DIST <- daisy(all_data2[, -c(1)], "gower", weights = x)
 coupon_gower_distance_DF <- as.matrix(coupon_gower_distance_DIST)
 
 quick_sep  <- function(num, data){
@@ -121,6 +123,19 @@ user_coupon_pairs <- do.call(rbind,
                              mclapply(1:nrow(train_users), 
                                       quick_sep, 
                                       coupon_gower_distance_DF, mc.cores=6))
+
+ulist <- read.csv("user_list.csv")
+
+PURCHASED_COUPONS <- as.data.frame(cbind(train_users$USER_ID_hash, PURCHASED_COUPONS = do.call(rbind, lapply(1:nrow(user_coupon_pairs),FUN=function(i){
+  purchased_cp <- paste(coup_list_test$COUPON_ID_hash[order(user_coupon_pairs[i,])][1:10],collapse=" ")
+  return(purchased_cp)
+}))))
+
+names(PURCHASED_COUPONS) <- c("USER_ID_hash","PURCHASED_COUPONS")
+
+submission <- merge(ulist, PURCHASED_COUPONS, all.x=TRUE)
+submission <- submission[,c("USER_ID_hash","PURCHASED_COUPONS")]
+write.csv(submission, file="gower_dist_sub5.csv", row.names=FALSE)
 
 # Coupon similiarty:
 head(coup_list_train)

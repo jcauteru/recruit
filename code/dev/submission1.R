@@ -40,6 +40,11 @@ uchar <- aggregate(.~USER_ID_hash, data=train[,-1],FUN=mean)
 uchar$DISCOUNT_PRICE <- 1
 uchar$PRICE_RATE <- 1
 
+"GENRE_NAME","DISCOUNT_PRICE","PRICE_RATE",
+"USABLE_DATE_MON","USABLE_DATE_TUE","USABLE_DATE_WED","USABLE_DATE_THU",
+"USABLE_DATE_FRI","USABLE_DATE_SAT","USABLE_DATE_SUN","USABLE_DATE_HOLIDAY",
+"USABLE_DATE_BEFORE_HOLIDAY","ken_name","small_area_name"
+
 W <- as.matrix(Diagonal(x=c(rep(3,13), rep(1,1), rep(0.2,1), rep(0,9), rep(3,47), rep(3,55))))
 
 score = as.matrix(uchar[,2:ncol(uchar)]) %*% W %*% t(as.matrix(test[,2:ncol(test)]))
