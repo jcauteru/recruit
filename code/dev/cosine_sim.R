@@ -42,9 +42,7 @@ uchar$PRICE_RATE <- 1
 
 #Weight Matrix: GENRE_NAME DISCOUNT_PRICE PRICE_RATE USABLE_DATE_ large_area_name ken_name small_area_name
 require(Matrix)
-W <- as.matrix(Diagonal(x=c(rep(2,13), rep(2,1), rep(-0.1,1), rep(0,9), rep(0.5,9), rep(1,47), rep(5,55))))
-
-#calculation of cosine similairties of users and coupons
+W <- as.matrix(Diagonal(x=c(rep(2,13), rep(2,1), rep(-0.13,1), rep(0,9), rep(0.51,9), rep(1,47), rep(4.78,55))))#calculation of cosine similairties of users and coupons
 score = as.matrix(uchar[,2:ncol(uchar)]) %*% W %*% t(as.matrix(test[,2:ncol(test)]))
 #order the list of coupons according to similairties and take only first 10 coupons
 uchar$PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
@@ -55,4 +53,4 @@ uchar$PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
 #make submission
 submission <- merge(ulist, uchar, all.x=TRUE)
 submission <- submission[,c("USER_ID_hash","PURCHASED_COUPONS")]
-write.csv(submission, file="cosine_sim2.csv", row.names=FALSE)
+write.csv(submission, file="cosine_sim3at10.csv", row.names=FALSE)

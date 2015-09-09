@@ -1,8 +1,7 @@
 # Nested RF #
 setwd('/media/hdd/kaggle/recruit/data')
-source('/media/hdd/kaggle/recruit/code/dev/cross_validation_framework.R')
-#source('/media/hdd/kaggle/recruit/code/dev/data_process.R')
-source('/media/hdd/kaggle/recruit/code/dev/model_process.R')
+source('/media/hdd/kaggle/recruit/code/dev/data_process.R')
+source('/media/hdd/kaggle/recruit/code/dev/evaluation-mapk.R')
 
 library(parallel)
 
