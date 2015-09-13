@@ -38,10 +38,10 @@ getMe <- function(){
 
 
 	all_training_data <<- train[, -c(1, 2)]
-	all_training_coupon_ids <<- train[, c(1)]
+	all_training_coupon_ids <<- train[, c(1,2)]
 	  
 	all_testing_data <<- test[, -c(1, 2)]
-	all_testing_coupon_ids <<- test[, c(1)]
+	all_testing_coupon_ids <<- test[, c(1,2)]
 
 }
 

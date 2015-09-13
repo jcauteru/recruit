@@ -31,21 +31,23 @@ getData <- function(TYPE, HOP_ST='NONE', HOP_ED='NONE'){
     HOP_ST <- as.Date(HOP_ST, format = '%Y-%m-%d')
     HOP_ED <- as.Date(HOP_ED, format = '%Y-%m-%d')
     
-    global_holdout <- coup_list_train$COUPON_ID_hash[
+    global_holdout <- as.character(coup_list_train$COUPON_ID_hash[
       HOP_ST <= as.Date(coup_list_train$DISPFROM) & 
-      HOP_ED >= as.Date(coup_list_train$DISPFROM)]
+      HOP_ED >= as.Date(coup_list_train$DISPFROM)])
+    
+    # Create Validation Set with coupons removed
+    validation_coupon_index <<- match(global_holdout, all_training_coupon_ids$COUPON_ID_hash)
+    formatted_validation_set <<- all_training_data[validation_coupon_index, ]
+    val_removed_training_data <<- all_training_data[-c(validation_coupon_index), ]
+    map_ready_ground_truth <<- produceGT(coup_det_train[coup_det_train$COUPON_ID_hash %in% global_holdout
+                                                        , c('USER_ID_hash', 'COUPON_ID_hash')]) # givena list of coupons I say a user will purchase them
+    
+    names(map_ready_ground_truth) <- c('USER_ID_hash', 'PURCHASED_COUPONS')
+    
     
   }
   
-  # Create Validation Set with coupons removed
-  validation_coupon_index <<- match(global_holdout, all_training_coupon_ids)
-  formatted_validation_set <<- all_training_data[validation_coupon_index, ]
-  val_removed_training_data <<- all_training_data[-c(validation_coupon_index), ]
-  map_ready_ground_truth <<- produceGT(coup_det_train[coup_det_train$COUPON_ID_hash %in% global_holdout
-                                                     , c('USER_ID_hash', 'COUPON_ID_hash')]) # givena list of coupons I say a user will purchase them
-  
-  names(map_ready_ground_truth) <- c('USER_ID_hash', 'PURCHASED_COUPONS')
-  
+
 }
 
 ## Process the Visit Data ##
