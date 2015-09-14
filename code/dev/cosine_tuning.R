@@ -3,6 +3,7 @@ source('/media/hdd/kaggle/recruit/code/dev/data_process.R')
 source('/media/hdd/kaggle/recruit/code/dev/evaluation-mapk.R')
 
 library(parallel)
+library(Matrix)
 
 DT_ST <- as.Date('2011-07-01', format = '%Y-%m-%d')
 DT_ED <- as.Date('2012-06-23', format = '%Y-%m-%d')
@@ -44,15 +45,10 @@ A <- A[, -c(1)]
 B <- formatted_validation_set
 
 R_W_PROD <- function(i, DF1, DF2, left_users, rt_ids, tar_check){
-  ll <- list()
-  
   user_purch <- tar_check[tar_check$USER_ID_hash == left_users[i], c('COUPON_ID_hash')]
-  
-  for (k in 1:nrow(DF2)){
-    ll[[k]] <- as.data.frame(as.vector(DF1[i, ])*as.vector(DF2[k, ]))
-  }
-  
-  lldf <- do.call(rbind.data.frame, ll)
+  right_hand_matrix <- as.matrix(DF2)
+  hld_row <- as.numeric(DF1[i, ])
+  lldf <- as.data.frame(Reduce('*', list(hld_row, right_hand_matrix)))
   lldf$USER_ID_hash <- left_users[i]
   lldf$TARGET <- rt_ids %in% user_purch
   return(lldf)
@@ -63,8 +59,8 @@ purchase_users <- unique(testing_purchases$USER_ID_hash)
 non_purchase_users <- setdiff(user_list$USER_ID_hash, purchase_users)
 
 # Ideally we'd do this process for everyone
-sample_indecies <-  c(match(sample(purchase_users, 100), users),
-                      match(sample(non_purchase_users, 100), users))
+sample_indecies <-  c(match(sample(purchase_users, length(purchase_users)), users),
+                      match(sample(non_purchase_users, 1000), users))
 sample_indecies <- sample_indecies[!is.na(sample_indecies)]
 
 A_samp <- A[sample_indecies, ]
@@ -81,7 +77,8 @@ R <- do.call(rbind.data.frame, mclapply(1:nrow(A_samp),
 R_TARGETS <- R[R$TARGET == TRUE, ]
 R_NT <- R[R$TARGET == FALSE, ]
 
-sample_iterations <- 2
+
+
 cosine_tuner <- function(i, TARS, NO_TARS){
   set.seed(round((i*runif(1, 1, 30000))/runif(1, 20, 3854))) 
   for_tuning <- rbind(TARS, NO_TARS[sample(1:nrow(NO_TARS), nrow(R_TARGETS)), ])
@@ -94,5 +91,15 @@ cosine_tuner <- function(i, TARS, NO_TARS){
   return(final)
 }
 
-feature_weights <- mclapply(1:sample_iterations, cosine_tuner, R_TARGETS, R_NT, mc.cores = 7)
+return_weights <- function(weight_list, full_data){
+  mean_aggregate <- as.data.frame(aggregate(.~VAR, data=do.call(rbind, weight_list), FUN = mean))
+  mean_aggregate$VAR <- as.character(mean_aggregate$VAR)
+  mean_aggregate$VAR <- gsub('`', '',mean_aggregate$VAR)
+  fill <- rep(0, length(names(full_data)))
+  fill[match(mean_aggregate$VAR, names(full_data))] <- mean_aggregate$WT
+  return(as.matrix(Diagonal(fill)))
+}
 
+sample_iterations <- 2
+feature_weights <- mclapply(1:sample_iterations, cosine_tuner, R_TARGETS, R_NT, mc.cores = 7)
+D <- return_weights(feature_weights, A)
