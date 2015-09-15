@@ -2,7 +2,10 @@ setwd('/media/hdd/kaggle/recruit/data')
 source('/media/hdd/kaggle/recruit/code/dev/data_process.R')
 source('/media/hdd/kaggle/recruit/code/dev/evaluation-mapk.R')
 
-library(parallel)
+
+library(doParallel) # Used to compute the user matrix
+library(data.table) # Used to Rbind the results 
+library(speedglm)
 library(Matrix)
 
 DT_ST <- as.Date('2011-07-01', format = '%Y-%m-%d')
@@ -39,7 +42,8 @@ val_removed_training_data$COUPON_ID_hash <- training_coupons
 train <- merge(training_users_det, val_removed_training_data)
 
 ### Tuning Data Processing ###
-A <- as.data.frame(aggregate(.~USER_ID_hash, data=train[,-1],FUN=mean))
+dt_tr <- data.table(train[, -1])
+A <- as.data.frame(dt_tr[, lapply(.SD,mean), by=USER_ID_hash])
 users <- A$USER_ID_hash
 A <- A[, -c(1)]
 B <- formatted_validation_set
@@ -59,30 +63,47 @@ purchase_users <- unique(testing_purchases$USER_ID_hash)
 non_purchase_users <- setdiff(user_list$USER_ID_hash, purchase_users)
 
 # Ideally we'd do this process for everyone
-sample_indecies <-  c(match(sample(purchase_users, length(purchase_users)), users),
+sample_indecies <-  c(match(sample(purchase_users, 1000), users),
                       match(sample(non_purchase_users, 1000), users))
 sample_indecies <- sample_indecies[!is.na(sample_indecies)]
 
 A_samp <- A[sample_indecies, ]
 A_samp_users <- users[sample_indecies]
 
-R <- do.call(rbind.data.frame, mclapply(1:nrow(A_samp), 
-                                        R_W_PROD, A_samp, 
-                                        B, A_samp_users,
-                                        testing_coupons, testing_purchases, 
-                                        mc.cores = 7))
+detectCores()
+my_clus <- makeCluster(7)
+registerDoParallel(my_clus)
+getDoParWorkers()
+
+results <- parLapply(my_clus, 1:nrow(A_samp), 
+                     R_W_PROD, A_samp, 
+                     B, A_samp_users,
+                     testing_coupons, testing_purchases)
+
+R <- as.data.frame(rbindlist(results))
 
 # Random Sample Purchases of coupons and non purchses and train weights
 # Then Iterate this process
 R_TARGETS <- R[R$TARGET == TRUE, ]
 R_NT <- R[R$TARGET == FALSE, ]
 
-
-
 cosine_tuner <- function(i, TARS, NO_TARS){
+  
   set.seed(round((i*runif(1, 1, 30000))/runif(1, 20, 3854))) 
   for_tuning <- rbind(TARS, NO_TARS[sample(1:nrow(NO_TARS), nrow(R_TARGETS)), ])
-  regres <- glm(TARGET ~ -1 + ., data = R[, -c(136)], family='binomial')
+  
+  # Hold Var Names:
+  v_name_hold <- names(for_tuning)
+  new_names <- paste('V', 1:ncol(for_tuning), sep='')
+  names(for_tuning) <- new_names
+  # this is broken...
+  rm_cols <- which(colSums(for_tuning) == 0)
+  print(rm_cols)
+  for_tuning <- for_tuning[, -c(rm_cols, 136)]
+  indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
+  fo <- as.formula(paste(names[for_tuning][ncol(for_tuning)], "~-1+", indep, sep=''))
+  print()
+  regres <- speedglm(fo, for_tuning, family=binomial())
   results <- coef(summary(regres))
   vars <- row.names(results)
   weight <- results[, 1]
