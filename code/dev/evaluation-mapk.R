@@ -14,12 +14,13 @@ apk <- function(k, actual, predicted)
   score
 }
 
-mapk <- function (k, actual, predicted)
-{
+mapk <- function (k, actual, predicted){
   scores <- rep(0, length(actual))
   for (i in 1:length(scores))
   {
-    scores[i] <- apk(k, actual[[i]], predicted[[i]])
+    act <- actual[[i]][1]
+    pred <- unlist(strsplit(predicted[i], ' '))
+    scores[i] <- apk(k, act, pred)
   }
   score <- mean(scores)
   score

@@ -102,7 +102,7 @@ while (i2 < imax) {  # this loop takes a few minutes
 # Weight matrix with 7 factors, separate for male and female users 
 #Weight Matrix: GENRE_NAME, DISCOUNT_PRICE, DISPPERIOD, large_area_name, small_area_name, VALIDPERIOD, USABLE_DATE_sum
 require(Matrix)
-weightm <- c(2.00, 1.25, 1.25, 1.00, 4.50, 0.625, 0.35) # males weights
+weightm <- c(1.96, 1.25, 1.25, 1.0, 4.50, 0.625, 0.4) # males weights
 weightf <- c(1.75, 0.75, 1.50, 1.00, 4.50, 0.625, 0.25) # female weights
 Wm <- as.matrix(Diagonal(x=c(rep(weightm[1],13), rep(weightm[2],1), rep(weightm[3],1), rep(weightm[4],9), 
                              rep(weightm[5],55),rep(weightm[6],2),rep(weightm[7],1))))
@@ -120,4 +120,4 @@ uchar$PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
 #make submission
 submission <- uchar[,c("USER_ID_hash","PURCHASED_COUPONS")]
 submission$PURCHASED_COUPONS[rowSums(score)==0] <- ""
-write.csv(submission, file="submit.csv", row.names=FALSE)
+write.csv(submission, file="submit22.csv", row.names=FALSE)

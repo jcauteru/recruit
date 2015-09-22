@@ -55,6 +55,7 @@ results <- parLapply(my_clus, 1:nrow(A_samp),
                      B, A_samp_users,
                      testing_coupons, testing_purchases)
 
+stopCluster(my_clus)
 R <- as.data.frame(rbindlist(results))
 
 # Random Sample Purchases of coupons and non purchses and train weights
@@ -77,7 +78,32 @@ cosine_tuner <- function(i, TARS, NO_TARS){
   indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
   fo <- as.formula(paste(names(for_tuning)[ncol(for_tuning)], "~-1+", indep, sep=''))
   print(fo)
-  regres <- speedglm(fo, for_tuning, family=binomial())
+  regres <- bigglm(fo, for_tuning, family=binomial(), maxit=10)
+  results <- coef(summary(regres))
+  vars <- row.names(results)
+  weight <- results[, 1]
+  weight_pv <- as.numeric(results[, 4])
+  final <- data.frame(VAR=vars[weight_pv <= .1], WT=weight[weight_pv <= .1])
+  return(final)
+}
+
+
+cosine_tuner2 <- function(i, TARS, NO_TARS){
+  
+  set.seed(round((i*runif(1, 1, 30000))/runif(1, 20, 3854))) 
+  for_tuning <- rbind(TARS, NO_TARS[sample(1:nrow(NO_TARS), nrow(R_TARGETS)), ])[, -136]
+  
+  # Hold Var Names:
+  v_name_hold <- names(for_tuning)
+  new_names <- paste('V', 1:ncol(for_tuning), sep='')
+  names(for_tuning) <- new_names
+  # this is broken...
+  rm_cols <- which(colSums(for_tuning) == 0)
+  for_tuning <- for_tuning[, -c(rm_cols)]
+  indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
+  fo <- as.formula(paste(names(for_tuning)[ncol(for_tuning)], "~-1+", indep, sep=''))
+  print(fo)
+  regres <- glm(fo, for_tuning, family='binomial')
   results <- coef(summary(regres))
   vars <- row.names(results)
   weight <- results[, 1]
