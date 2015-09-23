@@ -25,6 +25,7 @@ getData <- function(TYPE, HOP_ST='NONE', HOP_ED='NONE'){
   if (TYPE == 'INFO'){print(c('user_viz_rf', 'cos_sim_ser'))}
   if (TYPE == 'user_viz_rf'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
   if (TYPE == 'cos_sim_ser'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
+  if (TYPE == 'cos_sim_ser_female'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
   
   if (HOP_ST != 'NONE' & !is.na(as.Date(HOP_ST, format = '%Y-%m-%d'))){
     
