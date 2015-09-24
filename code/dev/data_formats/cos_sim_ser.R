@@ -1,4 +1,4 @@
-setwd('/media/hdd/kaggle/recruit/data')
+#setwd('/media/hdd/kaggle/recruit/data')
 
 getMe <- function(){
 
