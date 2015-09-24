@@ -106,7 +106,6 @@ cosine_tuner2 <- function(i, TARS, NO_TARS){
   for_tuning <- for_tuning[, -c(rm_cols)]
   indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
   fo <- as.formula(paste(names(for_tuning)[ncol(for_tuning)], "~-1+", indep, sep=''))
-  print(fo)
   regres <- glm(fo, for_tuning, family='binomial')
   results <- coef(summary(regres))
   vars <- row.names(results)
