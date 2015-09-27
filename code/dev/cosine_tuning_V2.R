@@ -74,7 +74,7 @@ tuner <- function(){
 
 }
 
-tuner()
+ESTIMATION <- tuner()
 # 
 # score = as.matrix(A) %*% D %*% t(as.matrix(B))
 # #order the list of coupons according to similairties and take only first 10 coupons
