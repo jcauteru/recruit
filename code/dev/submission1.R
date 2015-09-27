@@ -59,3 +59,9 @@ submission <- merge(ulist, uchar, all.x=TRUE)
 submission <- submission[,c("USER_ID_hash","PURCHASED_COUPONS")]
 write.csv(submission, file="cosine_sim_subtest1.csv", row.names=FALSE)
 
+
+#Find uchar's for each genre(13) to small_area_name(55) = 715 combinations
+# Count users in each genre/small area bucket
+# Bucket Lookup table
+genre_by_small_area <- as.data.frame(table(train$GENRE_NAME,train$small_area_name)) #453/715 are > 0
+length(genre_by_small_area$Var2[which(genre_by_small_area$Freq == 0)])
