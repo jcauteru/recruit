@@ -24,8 +24,8 @@ for (i in 1:(length(weeks)-1)){
   wk_pairs[[i]] <- c(weeks[i], weeks[i+1])
 }
 
-W <- as.matrix(Diagonal(x=c(rep(2,13), rep(2,1), rep(-0.13,1), rep(0,9), rep(0.51,9), rep(1,47), rep(4.78,55))))#calculation of cosine similairties of users and coupons
-subset <- as.character(clusterlookup[clusterlookup$cluster == "f1","USER_ID_hash"])
+desired_cluster <- 'f1'
+subset <- as.character(clusterlookup[clusterlookup$cluster == desired_cluster,"USER_ID_hash"])
 
 Glob_D <- list()
 
@@ -75,15 +75,9 @@ tuner <- function(){
 }
 
 ESTIMATION <- tuner()
-# 
-# score = as.matrix(A) %*% D %*% t(as.matrix(B))
-# #order the list of coupons according to similairties and take only first 10 coupons
-# uchar$PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
-#   purchased_cp <- paste(test$COUPON_ID_hash[order(score[i,], decreasing = TRUE)][1:10],collapse=" ")
-#   return(purchased_cp)
-# }))
-# 
-# #make submission
-# submission <- merge(ulist, uchar, all.x=TRUE)
-# submission <- submission[,c("USER_ID_hash","PURCHASED_COUPONS")]
-# write.csv(submission, file="TST_JOE.csv", row.names=FALSE)
+
+weights <- colMeans(ESTIMATION)
+D <- as.matrix(Diagonal(length(weights), weights))
+write.csv(D, 
+          file=paste('/media/hdd/kaggle/recruit/data/scores_', desired_cluster, '.csv', sep = ''), 
+          row.names = F)
