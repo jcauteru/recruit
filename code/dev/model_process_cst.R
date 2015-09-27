@@ -2,12 +2,16 @@
 # Remove user Records as well:
 
 ### Internal Test Data Processing  ###
+# Subset DETAIL
+
+coup_det_train_sub <- coup_det_train[coup_det_train$USER_ID_hash %in% subset, ]
+
 testing_coupons <- coup_list_train$COUPON_ID_hash[validation_coupon_index]
-testing_purchases <- coup_det_train[coup_det_train$COUPON_ID_has %in% testing_coupons, 
+testing_purchases <- coup_det_train_sub[coup_det_train_sub$COUPON_ID_has %in% testing_coupons, 
                                     c(5, 6)]
 
 ### Training Data rocessing ###
-training_users_det <- coup_det_train[!(coup_det_train$COUPON_ID_hash %in% 
+training_users_det <- coup_det_train_sub[!(coup_det_train_sub$COUPON_ID_hash %in% 
                                          testing_coupons),
                                      c('USER_ID_hash', 'COUPON_ID_hash')]
 
@@ -102,7 +106,6 @@ cosine_tuner2 <- function(i, TARS, NO_TARS){
   for_tuning <- for_tuning[, -c(rm_cols)]
   indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
   fo <- as.formula(paste(names(for_tuning)[ncol(for_tuning)], "~-1+", indep, sep=''))
-  print(fo)
   regres <- glm(fo, for_tuning, family='binomial')
   results <- coef(summary(regres))
   vars <- row.names(results)

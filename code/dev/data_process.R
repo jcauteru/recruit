@@ -1,4 +1,5 @@
 data_formats <- '/media/hdd/kaggle/recruit/code/dev/data_formats'
+#data_formats <- '/home/ubuntu/JOE/recruit/code/dev/data_formats'
 
 # Data Files used throughout all data processes ######
 coup_det_train <- read.csv("coupon_detail_train.csv", header = T, stringsAsFactors = F)
@@ -9,7 +10,7 @@ coup_list_train <- read.csv("coupon_list_train.csv", header = T, stringsAsFactor
 coup_list_test <- read.csv("coupon_list_test.csv", header = T, stringsAsFactors = T)
 
 user_list <- read.csv("user_list.csv")
-
+clusterlookup <- read.csv("cluslookup.csv")
 ##########
 
 
@@ -25,7 +26,8 @@ getData <- function(TYPE, HOP_ST='NONE', HOP_ED='NONE'){
   if (TYPE == 'INFO'){print(c('user_viz_rf', 'cos_sim_ser'))}
   if (TYPE == 'user_viz_rf'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
   if (TYPE == 'cos_sim_ser'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
-  
+  #if (TYPE == 'cos_sim_ser_female'){source(paste(data_formats, '/', TYPE, '.R', sep = ''))}
+
   if (HOP_ST != 'NONE' & !is.na(as.Date(HOP_ST, format = '%Y-%m-%d'))){
     
     HOP_ST <- as.Date(HOP_ST, format = '%Y-%m-%d')

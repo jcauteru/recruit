@@ -1,4 +1,5 @@
-#setwd('/media/hdd/kaggle/recruit/data')
+setwd('/media/hdd/kaggle/recruit/data')
+#setwd('~/JOE/data')
 
 getMe <- function(){
 
@@ -37,11 +38,14 @@ getMe <- function(){
 	train$PRICE_RATE <- 1
 
 
-	all_training_data <<- train[, -c(1, 2)]
-	all_training_coupon_ids <<- train[, c(1,2)]
+	## SUBSET TO FEMALES HERE AND RETURN...CAN ALSO DO ABOVE ##
+	subsetids <<- as.character(clusterlookup[clusterlookup$cluster == "f1","USER_ID_hash"])
+
+	all_training_data <<- train[train$USER_ID_hash %in% subsetids, -c(1, 2)]
+	all_training_coupon_ids <<- train[train$USER_ID_hash %in% subsetids, c(1,2)]
 	  
-	all_testing_data <<- test[, -c(1, 2)]
-	all_testing_coupon_ids <<- test[, c(1,2)]
+	all_testing_data <<- test[test$USER_ID_hash %in% subsetids, -c(1, 2)]
+	all_testing_coupon_ids <<- test[test$USER_ID_hash %in% subsetids, c(1,2)]
 
 }
 
