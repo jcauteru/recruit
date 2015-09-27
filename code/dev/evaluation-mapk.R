@@ -11,7 +11,7 @@ apk <- function(k, actual, predicted)
     }
   }
   score <- score / min(length(actual), k)
-  score
+  return(score)
 }
 
 mapk <- function (k, actual, predicted){
@@ -23,5 +23,5 @@ mapk <- function (k, actual, predicted){
     scores[i] <- apk(k, act, pred)
   }
   score <- mean(scores)
-  score
+  return(score)
 }

@@ -115,6 +115,29 @@ cosine_tuner2 <- function(i, TARS, NO_TARS){
   return(final)
 }
 
+cosine_tuner3 <- function(i, TARS, NO_TARS){
+  
+  set.seed(round((i*runif(1, 1, 30000))/runif(1, 20, 3854))) 
+  for_tuning <- rbind(TARS, NO_TARS[sample(1:nrow(NO_TARS), nrow(R_TARGETS)), ])[, -136]
+  
+  # Hold Var Names:
+  v_name_hold <- names(for_tuning)
+  new_names <- paste('V', 1:ncol(for_tuning), sep='')
+  names(for_tuning) <- new_names
+  # this is broken...
+  rm_cols <- which(colSums(for_tuning) == 0)
+  for_tuning <- for_tuning[, -c(rm_cols)]
+  indep <-paste(names(for_tuning)[-ncol(for_tuning)], collapse='+')
+  y <- as.vector(for_tuning[, ncol(for_tuning)])
+  x <- as.matrix(for_tuning[, -ncol(for_tuning)])
+  regres <- cv.glmnet(x, y, family='binomial', type.measure = "class")
+  results <- coef(regres, s = "lambda.min")
+  vars <- row.names(results)[-1]
+  weight <- results[-1, 1]
+  final <- data.frame(VAR=vars, WT=weight)
+  return(final)
+}
+
 return_weights <- function(weight_list, name_set){
   weight_list_mod <- lapply(weight_list, function(x){if(nrow(x) > 0){return(x)}})
   mean_aggregate <- as.data.frame(aggregate(.~VAR, data=do.call(rbind, weight_list_mod), FUN = max))
@@ -123,4 +146,17 @@ return_weights <- function(weight_list, name_set){
   fill <- rep(0, length(name_set))
   fill[match(mean_aggregate$VAR, name_set)] <- mean_aggregate$WT
   return(as.matrix(Diagonal(length(fill), fill)))
+}
+
+stack_diag <- function(D, WK, GLOBAL){
+  if (WK == 1){
+    GLOBAL[[WK]] <- diag(D)
+  }
+  
+  if (WK > 1) {
+    GLOBAL[[WK]] <- diag(D)
+  }
+  
+  return(GLOBAL)
+  
 }

@@ -110,9 +110,8 @@ PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
   return(purchased_cp)
 }))
 PURCHASED_COUPONS[rowSums(score)==0] <- ""
-PURCHASED_COUPONS[uchar$USER_ID_hash %in% data_1$USER_ID_hash] <- as.character(data_1$PURCHASED_COUPONS)
-uchar$PURCHASED_COUPONS <- PURCHASED_COUPONS
-#make submission
-submission <- uchar[,c("USER_ID_hash","PURCHASED_COUPONS")]
 
-write.csv(submission, file="TUNING_MF_TST_2.csv", row.names=FALSE)
+submission <- data.frame(PURCHASE_COUPONS=PURCHASED_COUPONS, 
+                         USER_ID_HASH=uchar[,c("USER_ID_hash")])
+
+write.csv(submission, file="RUNNING_BASE.csv", row.names=FALSE)
