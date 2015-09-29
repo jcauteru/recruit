@@ -24,7 +24,7 @@ for (i in 1:(length(weeks)-1)){
   wk_pairs[[i]] <- c(weeks[i], weeks[i+1])
 }
 
-desired_cluster <- 'f1'
+desired_cluster <- 'f3'
 subset <- as.character(clusterlookup[clusterlookup$cluster == desired_cluster,"USER_ID_hash"])
 
 Glob_D <- list()

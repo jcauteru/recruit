@@ -44,20 +44,41 @@ uchar$DISCOUNT_PRICE <- 1
 uchar$PRICE_RATE <- 1
 
 #Weight Matrix: GENRE_NAME DISCOUNT_PRICE PRICE_RATE USABLE_DATE_ large_area_name ken_name small_area_name
-desired_cluster <- "f1"
-get <- paste('/media/hdd/kaggle/recruit/data/scores_', desired_cluster, '.csv', sep = '')
-W <- as.matrix(read.csv(get))
 
-score = as.matrix(uchar[,2:ncol(uchar)]) %*% W %*% t(as.matrix(test[,2:ncol(test)]))
-PURCHASED_COUPONS_m <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
-  purchased_cp <- paste(test$COUPON_ID_hash[order(score[i,], decreasing = TRUE)][1:10],collapse=" ")
-  return(purchased_cp)
-}))
+# Read in the estimations
+scores_f1 <- as.matrix(read.csv(
+  paste('/media/hdd/kaggle/recruit/data/scores_f1.csv', sep = '')))
 
+scores_f2 <- as.matrix(read.csv(
+  paste('/media/hdd/kaggle/recruit/data/scores_f2.csv', sep = '')))
+
+scores_f3 <- as.matrix(read.csv(
+  paste('/media/hdd/kaggle/recruit/data/scores_f3.csv', sep = '')))
+
+scores_f4 <- as.matrix(read.csv(
+  paste('/media/hdd/kaggle/recruit/data/scores_f4.csv', sep = '')))
+
+
+needed <- c('f2','f4')
 clusterlookup <- read.csv('cluslookup.csv', header = T, stringsAsFactors = F)
-grab_id <- subset <- as.character(clusterlookup[clusterlookup$cluster == desired_cluster,"USER_ID_hash"])
+tuning_base <- read.csv('RUNNING_BASE.csv', header = T, stringsAsFactors = F)
 
-tuning_base[tuning_base$USER_ID_hash %in% grab_id, 2] <- PURCHASED_COUPONS_m[tuning_base$USER_ID_hash %in% grab_id]
+tuning_base1 <- tuning_base
+
+for (n in needed){
+  print(n)
+  W <- as.matrix(read.csv(
+    paste('/media/hdd/kaggle/recruit/data/scores_', n, '.csv', sep = '')))
+  score = as.matrix(uchar[,2:ncol(uchar)]) %*% W %*% t(as.matrix(test[,2:ncol(test)]))
+  PURCHASED_COUPONS <- do.call(rbind, lapply(1:nrow(uchar),FUN=function(i){
+    purchased_cp <- paste(test$COUPON_ID_hash[order(score[i,], decreasing = TRUE)][1:10],collapse=" ")
+    return(purchased_cp)
+  }))
+  grab_id <- as.character(clusterlookup[clusterlookup$cluster == n,"USER_ID_hash"])
+  tuning_base[tuning_base$USER_ID_HASH %in% grab_id, 1] <- PURCHASED_COUPONS[tuning_base$USER_ID_HASH %in% grab_id]
+}
+
+
 tuning_base <- tuning_base[, c('USER_ID_HASH', 'PURCHASE_COUPONS')]
 names(tuning_base) <- c('USER_ID_HASH', 'PURCHASED_COUPONS')
-write.csv(tuning_base, file='f1_sub.csv', row.names = F)
+write.csv(tuning_base, file='enet_test_1.csv', row.names = F)
